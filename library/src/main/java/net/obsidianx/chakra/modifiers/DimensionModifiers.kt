@@ -5,13 +5,14 @@ import com.facebook.yoga.YogaUnit
 import com.facebook.yoga.YogaValue
 import net.obsidianx.chakra.FlexboxStyleScope
 import net.obsidianx.chakra.types.FlexUnit
+import kotlin.math.min
 
 fun FlexboxStyleScope.width(dp: Dp) {
     nodeData.style.width = YogaValue(dp.value * density.density, YogaUnit.POINT)
 }
 
 fun FlexboxStyleScope.width(percent: Float) {
-    nodeData.style.width = YogaValue(percent, YogaUnit.PERCENT)
+    nodeData.style.width = YogaValue(min(percent, 100f), YogaUnit.PERCENT)
 }
 
 fun FlexboxStyleScope.width(type: FlexUnit) {
@@ -23,7 +24,7 @@ fun FlexboxStyleScope.height(dp: Dp) {
 }
 
 fun FlexboxStyleScope.height(percent: Float) {
-    nodeData.style.height = YogaValue(percent, YogaUnit.PERCENT)
+    nodeData.style.height = YogaValue(min(percent, 100f), YogaUnit.PERCENT)
 }
 
 fun FlexboxStyleScope.height(type: FlexUnit) {
@@ -35,7 +36,7 @@ fun FlexboxStyleScope.minWidth(dp: Dp) {
 }
 
 fun FlexboxStyleScope.minWidth(percent: Float) {
-    nodeData.style.minWidth = YogaValue(percent, YogaUnit.PERCENT)
+    nodeData.style.minWidth = YogaValue(min(percent, 100f), YogaUnit.PERCENT)
 }
 
 fun FlexboxStyleScope.minWidth(type: FlexUnit) {
@@ -47,7 +48,7 @@ fun FlexboxStyleScope.minHeight(dp: Dp) {
 }
 
 fun FlexboxStyleScope.minHeight(percent: Float) {
-    nodeData.style.minHeight = YogaValue(percent, YogaUnit.PERCENT)
+    nodeData.style.minHeight = YogaValue(min(percent, 100f), YogaUnit.PERCENT)
 }
 
 fun FlexboxStyleScope.minHeight(type: FlexUnit) {
@@ -59,7 +60,7 @@ fun FlexboxStyleScope.maxWidth(dp: Dp) {
 }
 
 fun FlexboxStyleScope.maxWidth(percent: Float) {
-    nodeData.style.maxWidth = YogaValue(percent, YogaUnit.PERCENT)
+    nodeData.style.maxWidth = YogaValue(min(percent, 100f), YogaUnit.PERCENT)
 }
 
 fun FlexboxStyleScope.maxWidth(type: FlexUnit) {
@@ -71,7 +72,7 @@ fun FlexboxStyleScope.maxHeight(dp: Dp) {
 }
 
 fun FlexboxStyleScope.maxHeight(percent: Float) {
-    nodeData.style.maxHeight = YogaValue(percent, YogaUnit.PERCENT)
+    nodeData.style.maxHeight = YogaValue(min(percent, 100f), YogaUnit.PERCENT)
 }
 
 fun FlexboxStyleScope.maxHeight(type: FlexUnit) {
