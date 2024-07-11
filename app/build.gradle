@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace 'net.obsidianx.chakra'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "net.obsidianx.chakra"
-        minSdk 24
-        targetSdk 33
+        minSdk 28
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -37,7 +37,7 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.4.4'
+        kotlinCompilerExtensionVersion '1.5.10'
     }
     packagingOptions {
         resources {

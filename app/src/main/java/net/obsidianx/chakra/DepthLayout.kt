@@ -1,8 +1,10 @@
 package net.obsidianx.chakra
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -60,6 +62,38 @@ fun DepthLayout() {
                 )
             }
         }
+    }
+
+    Spacer(modifier = Modifier.size(10.dp))
+
+    Flexbox(modifier = Modifier.flex {
+        direction(FlexDirection.Row)
+    }) {
+        NineSegment(align = FlexAlign.Start, justify = FlexJustify.Start)
+        Spacer(modifier = Modifier.size(5.dp))
+        NineSegment(align = FlexAlign.Center, justify = FlexJustify.Start)
+        Spacer(modifier = Modifier.size(5.dp))
+        NineSegment(align = FlexAlign.End, justify = FlexJustify.Start)
+    }
+    Spacer(modifier = Modifier.size(5.dp))
+    Flexbox(modifier = Modifier.flex {
+        direction(FlexDirection.Row)
+    }) {
+        NineSegment(align = FlexAlign.Start, justify = FlexJustify.Center)
+        Spacer(modifier = Modifier.size(5.dp))
+        NineSegment(align = FlexAlign.Center, justify = FlexJustify.Center)
+        Spacer(modifier = Modifier.size(5.dp))
+        NineSegment(align = FlexAlign.End, justify = FlexJustify.Center)
+    }
+    Spacer(modifier = Modifier.size(5.dp))
+    Flexbox(modifier = Modifier.flex {
+        direction(FlexDirection.Row)
+    }) {
+        NineSegment(align = FlexAlign.Start, justify = FlexJustify.End)
+        Spacer(modifier = Modifier.size(5.dp))
+        NineSegment(align = FlexAlign.Center, justify = FlexJustify.End)
+        Spacer(modifier = Modifier.size(5.dp))
+        NineSegment(align = FlexAlign.End, justify = FlexJustify.End)
     }
 
     Spacer(modifier = Modifier.size(10.dp))
@@ -138,5 +172,29 @@ fun DepthLayout() {
                 Text(text = "World")
             }
         }
+    }
+}
+
+@Composable
+fun NineSegment(align: FlexAlign, justify: FlexJustify) {
+    Flexbox(modifier = Modifier
+        .flex {
+            width(50.dp)
+            height(50.dp)
+            depthLayout(true)
+            alignItems(align)
+            justifyContent(justify)
+            padding(10.dp)
+        }
+        .border(1.dp, Color.Green)
+        .clipToBounds()) {
+        Flexbox(modifier = Modifier
+            .flex {
+                width(100.dp)
+                height(100.dp)
+            }
+            .background(Color.Blue, RoundedCornerShape(100))
+            .border(1.dp, Color.Blue, RoundedCornerShape(100))
+        )
     }
 }

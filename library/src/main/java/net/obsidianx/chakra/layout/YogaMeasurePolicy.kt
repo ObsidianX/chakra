@@ -16,6 +16,8 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import com.facebook.yoga.YogaAlign
 import com.facebook.yoga.YogaEdge
+import com.facebook.yoga.YogaFlexDirection
+import com.facebook.yoga.YogaJustify
 import com.facebook.yoga.YogaNode
 import com.facebook.yoga.YogaNodeFactory
 import com.facebook.yoga.YogaPositionType
@@ -29,7 +31,8 @@ import net.obsidianx.chakra.types.isContainer
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-internal class YogaMeasurePolicy(private val node: YogaNode, private val nodeData: FlexNodeData) : MeasurePolicy {
+internal class YogaMeasurePolicy(private val node: YogaNode, private val nodeData: FlexNodeData) :
+    MeasurePolicy {
     private var lastWidth: Int = -1
     private var lastHeight: Int = -1
     private var lastMeasurement: Size = Size.Unspecified
@@ -37,7 +40,10 @@ internal class YogaMeasurePolicy(private val node: YogaNode, private val nodeDat
     private val childLayout: Boolean
         get() = (node.data as? FlexNodeData)?.isChild == true
 
-    override fun MeasureScope.measure(measurables: List<Measurable>, constraints: Constraints): MeasureResult {
+    override fun MeasureScope.measure(
+        measurables: List<Measurable>,
+        constraints: Constraints
+    ): MeasureResult {
         (node.data as FlexNodeData).nodeState?.constraints = constraints
         node.log { "[Sync] my constraints: $constraints" }
 
@@ -54,8 +60,10 @@ internal class YogaMeasurePolicy(private val node: YogaNode, private val nodeDat
             val childNode = node.getChildAt(index)
             val childNodeData = childNode.data as FlexNodeData
 
-            val horizontalPadding = childNode.layoutHorizontalPadding.takeUnless { childNodeData.isContainer } ?: 0f
-            val verticalPadding = childNode.layoutVerticalPadding.takeUnless { childNodeData.isContainer } ?: 0f
+            val horizontalPadding =
+                childNode.layoutHorizontalPadding.takeUnless { childNodeData.isContainer } ?: 0f
+            val verticalPadding =
+                childNode.layoutVerticalPadding.takeUnless { childNodeData.isContainer } ?: 0f
 
             val childWidth = (childNode.layoutWidth - horizontalPadding)
                 .roundToInt()
@@ -77,17 +85,56 @@ internal class YogaMeasurePolicy(private val node: YogaNode, private val nodeDat
         // Step 4: Place views
         return layout(size.width.toInt(), size.height.toInt()) {
             val paddingStart = node.getLayoutPadding(YogaEdge.START)
+            val paddingEnd = node.getLayoutPadding(YogaEdge.END)
             val paddingTop = node.getLayoutPadding(YogaEdge.TOP)
+            val paddingBottom = node.getLayoutPadding(YogaEdge.BOTTOM)
 
             placeables.fastForEachIndexed { index, placeable ->
                 val childNode = node.getChildAt(index)
                 val childNodeData = childNode.data as FlexNodeData
 
-                val childPaddingStart = childNode.getLayoutPadding(YogaEdge.START).takeUnless { childNodeData.isContainer } ?: 0f
-                val childPaddingTop = childNode.getLayoutPadding(YogaEdge.TOP).takeUnless { childNodeData.isContainer } ?: 0f
+                val childPaddingStart = childNode.getLayoutPadding(YogaEdge.START)
+                    .takeUnless { childNodeData.isContainer } ?: 0f
+                val childPaddingTop = childNode.getLayoutPadding(YogaEdge.TOP)
+                    .takeUnless { childNodeData.isContainer } ?: 0f
 
-                val x = (childNode.layoutX + childPaddingStart).coerceAtLeast(paddingStart).roundToInt()
-                val y = (childNode.layoutY + childPaddingTop).coerceAtLeast(paddingTop).roundToInt()
+                val yAlign: YogaAlign
+                val xAlign: YogaAlign
+
+                val justifyToAlignment = when (node.justifyContent) {
+                    YogaJustify.CENTER -> YogaAlign.CENTER
+                    YogaJustify.FLEX_END -> YogaAlign.FLEX_END
+                    else -> YogaAlign.AUTO
+                }
+
+                when (node.flexDirection) {
+                    YogaFlexDirection.ROW,
+                    YogaFlexDirection.ROW_REVERSE -> {
+                        xAlign = justifyToAlignment
+                        yAlign = node.alignItems
+                    }
+
+                    else -> {
+                        xAlign = node.alignItems
+                        yAlign = justifyToAlignment
+                    }
+
+                }
+
+                val x = (childNode.layoutX + childPaddingStart).let {
+                    when (xAlign) {
+                        YogaAlign.CENTER -> it
+                        YogaAlign.FLEX_END -> it.coerceAtMost(node.layoutWidth - childNode.layoutWidth - paddingEnd)
+                        else -> it.coerceAtLeast(paddingStart)
+                    }
+                }.roundToInt()
+                val y = (childNode.layoutY + childPaddingTop).let {
+                    when (yAlign) {
+                        YogaAlign.CENTER -> it
+                        YogaAlign.FLEX_END -> it.coerceAtMost(node.layoutHeight - childNode.layoutHeight - paddingBottom)
+                        else -> it.coerceAtLeast(paddingTop)
+                    }
+                }.roundToInt()
 
                 node.log { "[Place] Child[$index][${childNode.address}] => (x: $x, y: $y)" }
                 placeable.placeRelative(x, y)
@@ -107,20 +154,32 @@ internal class YogaMeasurePolicy(private val node: YogaNode, private val nodeDat
         }
     }
 
-    override fun IntrinsicMeasureScope.minIntrinsicWidth(measurables: List<IntrinsicMeasurable>, height: Int): Int {
+    override fun IntrinsicMeasureScope.minIntrinsicWidth(
+        measurables: List<IntrinsicMeasurable>,
+        height: Int
+    ): Int {
         return maxIntrinsicWidth(measurables, height)
     }
 
-    override fun IntrinsicMeasureScope.minIntrinsicHeight(measurables: List<IntrinsicMeasurable>, width: Int): Int {
+    override fun IntrinsicMeasureScope.minIntrinsicHeight(
+        measurables: List<IntrinsicMeasurable>,
+        width: Int
+    ): Int {
         return maxIntrinsicHeight(measurables, width)
     }
 
-    override fun IntrinsicMeasureScope.maxIntrinsicWidth(measurables: List<IntrinsicMeasurable>, height: Int): Int {
+    override fun IntrinsicMeasureScope.maxIntrinsicWidth(
+        measurables: List<IntrinsicMeasurable>,
+        height: Int
+    ): Int {
         syncNodes(measurables)
         return measureYoga(measurables, Constraints(maxHeight = height), true).width.toInt()
     }
 
-    override fun IntrinsicMeasureScope.maxIntrinsicHeight(measurables: List<IntrinsicMeasurable>, width: Int): Int {
+    override fun IntrinsicMeasureScope.maxIntrinsicHeight(
+        measurables: List<IntrinsicMeasurable>,
+        width: Int
+    ): Int {
         syncNodes(measurables)
         return measureYoga(measurables, Constraints(maxWidth = width), true).height.toInt()
     }
@@ -180,7 +239,11 @@ internal class YogaMeasurePolicy(private val node: YogaNode, private val nodeDat
     /**
      * Runs calculateLayout after gathering intrinsic measurements for child nodes
      */
-    private fun measureYoga(measurables: List<IntrinsicMeasurable>, constraints: Constraints = Constraints(), intrinsic: Boolean = false): Size {
+    private fun measureYoga(
+        measurables: List<IntrinsicMeasurable>,
+        constraints: Constraints = Constraints(),
+        intrinsic: Boolean = false
+    ): Size {
         var constraintWidth = constraints.maxWidth
         var constraintHeight = constraints.maxHeight
         if (intrinsic && childLayout) {
@@ -195,7 +258,8 @@ internal class YogaMeasurePolicy(private val node: YogaNode, private val nodeDat
             }
         }
 
-        val applyingMeasurements = constraints.hasFixedWidth && constraints.hasFixedHeight && childLayout
+        val applyingMeasurements =
+            constraints.hasFixedWidth && constraints.hasFixedHeight && childLayout
         if (applyingMeasurements) {
             node.log { "[Measure] Parent container assigned size: (w: ${constraints.maxWidth}, h: ${constraints.maxHeight})" }
         } else {
@@ -316,7 +380,8 @@ internal class YogaMeasurePolicy(private val node: YogaNode, private val nodeDat
             val measuredWidth = minWidth + contentWidth
             val measuredHeight = minHeight + contentHeight
 
-            val crossStretch = node.owner?.alignItems == YogaAlign.STRETCH && node.positionType == YogaPositionType.RELATIVE
+            val crossStretch =
+                node.owner?.alignItems == YogaAlign.STRETCH && node.positionType == YogaPositionType.RELATIVE
             val inColumn = node.owner?.flexDirection?.isColumn == true
             val inRow = node.owner?.flexDirection?.isRow == true
 
